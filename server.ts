@@ -13,7 +13,7 @@ const selectors = [
     query: 'head',
     func: appendToNode((content, req) => {
       const host = extractTarget(req, true);
-      if (!/<base\b/.test(content)) {
+      if (host && !/<base\b/.test(content)) {
         return `<base href="${host}"/>`;
       }
     })
@@ -21,7 +21,24 @@ const selectors = [
   {
     // Add script
     query: 'body',
-    func: appendToNode(() => '<script>debugger; alert("Script added...!")</script>')
+    func: appendToNode(() => {
+      // TODO: Determine blinx options from query parameters; if no language given, check html doc
+      const language = 'en';
+      return `
+      <script
+        src="https://cdn.rawgit.com/renehamburger/Bible-Passage-Reference-Parser/99f03385/js/${language}_bcv_parser.js"
+        defer
+        data-blinx="{
+          language: '${language}',
+          theme: 'dark'
+        }">
+      </script>
+      <script
+        src="https://cdn.rawgit.com/renehamburger/blinx.js/v0.3.7/dist/blinx.js"
+        defer>
+      </script>
+    `
+    })
   }
 ]
 
@@ -44,13 +61,16 @@ const app = connect();
 app.use(harmon([], selectors));
 
 app.use(function (req: http.IncomingMessage, res: http.ServerResponse) {
-  // Remove 'accept-encoding' to disable gzip compression
-  // See https://github.com/nodejitsu/node-http-proxy/issues/795#issuecomment-84109473
-  delete req.headers['accept-encoding'];
-  proxy.web(req, res, { target: extractTarget(req) });
+  const target = extractTarget(req);
+  if (target) {
+    // Remove 'accept-encoding' to disable gzip compression
+    // See https://github.com/nodejitsu/node-http-proxy/issues/795#issuecomment-84109473
+    delete req.headers['accept-encoding'];
+    proxy.web(req, res, { target });
+  }
 })
 
-http.createServer(app).listen(9000);
+http.createServer(app).listen(80);
 
 
 //--- Helpers
@@ -58,7 +78,10 @@ http.createServer(app).listen(9000);
 function extractTarget(req: http.IncomingMessage, onlyRoot = false) {
   const query = req['_parsedUrl'].query || '';
   const urlMatches = query.match(/(?:^|&)url=(.*?)(?:$|&)/i);
-  let target = urlMatches ? urlMatches[1] : 'http://example.com';
+  let target = urlMatches ? urlMatches[1] : '';
+  if (!target) {
+    console.error(`'url' query parameter missing in request:`, req['_parsedUrl']);
+  }
   if (!/^https?:/.test(target)) {
     target = 'http://' + target;
   }
