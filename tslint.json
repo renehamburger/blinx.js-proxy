@@ -1,0 +1,18 @@
+{
+  "extends": "tslint:recommended",
+  "rules": {
+    "comment-format": false,
+    "max-line-length": {
+      "options": [
+        120
+      ]
+    },
+    "no-console": false,
+    "object-literal-sort-keys": false,
+    "quotemark": [
+      true,
+      "single"
+    ],
+    "trailing-comma": false
+  }
+}

@@ -1,9 +1,9 @@
-import * as http from 'http';
-import * as httpProxy from 'http-proxy';
 import * as connect from 'connect';
 import * as harmon from 'harmon';
+import * as http from 'http';
+import * as httpProxy from 'http-proxy';
 
-//--- Define selectors and modifiers for harmon
+// --- Define selectors and modifiers for harmon
 
 const selectors = [
   {
@@ -37,22 +37,20 @@ const selectors = [
         src="https://cdn.rawgit.com/renehamburger/blinx.js/v0.3.7/dist/blinx.js"
         defer>
       </script>
-    `
+    `;
     })
   }
-]
-
+];
 
 //--- Create proxy; target URL will be assigned below
 
 const proxy = httpProxy.createProxyServer({
   changeOrigin: true
-})
+});
 
 proxy.on('error', (e) => {
   console.error(e);
 });
-
 
 //--- Create & start app
 
@@ -60,7 +58,7 @@ const app = connect();
 
 app.use(harmon([], selectors));
 
-app.use(function (req: http.IncomingMessage, res: http.ServerResponse) {
+app.use((req: http.IncomingMessage, res: http.ServerResponse) => {
   const target = extractTarget(req);
   if (target) {
     // Remove 'accept-encoding' to disable gzip compression
@@ -68,19 +66,18 @@ app.use(function (req: http.IncomingMessage, res: http.ServerResponse) {
     delete req.headers['accept-encoding'];
     proxy.web(req, res, { target });
   }
-})
+});
 
 http.createServer(app).listen(80);
-
 
 //--- Helpers
 
 function extractTarget(req: http.IncomingMessage, onlyRoot = false) {
-  const query = req['_parsedUrl'].query || '';
+  const query = (req as any)._parsedUrl.query || '';
   const urlMatches = query.match(/(?:^|&)url=(.*?)(?:$|&)/i);
   let target = urlMatches ? urlMatches[1] : '';
   if (!target) {
-    console.error(`'url' query parameter missing in request:`, req['_parsedUrl']);
+    console.error(`'url' query parameter missing in request:`, (req as any)._parsedUrl);
   }
   if (!/^https?:/.test(target)) {
     target = 'http://' + target;
@@ -92,8 +89,8 @@ function extractTarget(req: http.IncomingMessage, onlyRoot = false) {
   return target;
 }
 
-function appendToNode(appendCallback) {
-  return (node: any, req: http.IncomingMessage) => {
+function appendToNode(appendCallback: (content: string, req: http.IncomingMessage) => void) {
+  return (node: harmon.Node, req: http.IncomingMessage) => {
     const rs = node.createReadStream();
     const ws = node.createWriteStream({ outer: false });
 
@@ -102,7 +99,7 @@ function appendToNode(appendCallback) {
     rs.pipe(ws, { end: false });
 
     let content = '';
-    rs.on('data', function (data) {
+    rs.on('data', (data: string) => {
       content += data;
     });
 
@@ -113,5 +110,5 @@ function appendToNode(appendCallback) {
         ws.end(appendix);
       }
     });
-  }
+  };
 }

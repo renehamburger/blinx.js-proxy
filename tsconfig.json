@@ -1,0 +1,31 @@
+{
+  "compilerOptions": {
+    "module": "commonjs",
+    "target": "es6",
+    "moduleResolution": "node",
+    "sourceMap": true,
+    "noEmit": true,
+    "baseUrl": ".",
+    "typeRoots": [
+      "./typings",
+      "./node_modules/@types"
+    ],
+    "types": [
+      "node"
+    ],
+    "paths": {
+      "*": [
+        "typings/*",
+        "node_modules/*"
+      ]
+    },
+    // Code quality
+    "strict": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noFallthroughCasesInSwitch": true,
+  },
+  "include": [
+    "src/**/*"
+  ]
+}
