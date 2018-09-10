@@ -2,6 +2,7 @@ import * as connect from 'connect';
 import * as harmon from 'harmon';
 import * as http from 'http';
 import * as httpProxy from 'http-proxy';
+import * as url from 'url';
 
 // --- Define selectors and modifiers for harmon
 
@@ -72,21 +73,22 @@ http.createServer(app).listen(80);
 
 //--- Helpers
 
-function extractTarget(req: http.IncomingMessage, onlyRoot = false) {
-  const query = (req as any)._parsedUrl.query || '';
-  const urlMatches = query.match(/(?:^|&)url=(.*?)(?:$|&)/i);
-  let target = urlMatches ? urlMatches[1] : '';
-  if (!target) {
-    console.error(`'url' query parameter missing in request:`, (req as any)._parsedUrl);
+function extractTarget(req: http.IncomingMessage, onlyRoot = false): string | null {
+  const parsedUrl = url.parse(req.url || '');
+  if (parsedUrl.query) {
+    let target = parsedUrl.query;
+    if (!/^https?:\/\//.test(target)) {
+      target = 'http://' + target;
+    }
+    const parsedTarget = url.parse(target);
+    if (parsedTarget.href) {
+      if (onlyRoot) {
+        return `${parsedTarget.protocol}//${parsedTarget.host}`;
+      }
+      return parsedTarget.href;
+    }
   }
-  if (!/^https?:/.test(target)) {
-    target = 'http://' + target;
-  }
-  if (onlyRoot) {
-    const rootMatches = target.match(/(^https?:\/\/[^\/]+)\//);
-    return rootMatches ? rootMatches[1] : target;
-  }
-  return target;
+  return null;
 }
 
 function appendToNode(appendCallback: (content: string, req: http.IncomingMessage) => void) {
