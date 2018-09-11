@@ -1,3 +1,10 @@
+/**
+ * TODO:
+ * - Add option to Blinx to remove existing Bible links.
+ * - Allow to add Blinx options to request, e.g. `bx.language=de`.
+ * - Add wrapper page at blinxify.me which allows to: set url, set options, share link, maybe
+ *   compare with original file.
+ */
 import * as connect from 'connect';
 import * as harmon from 'harmon';
 import * as http from 'http';
@@ -8,37 +15,36 @@ import * as url from 'url';
 
 const selectors = [
   {
-    // Add <base> tag in <head> to ensure that all
-    // subsequent relative requests are sent directly
-    // to the target host without further proxying.
     query: 'head',
     func: appendToNode((content, req) => {
+      let newContent = content;
+      //--- Add <base> tag
+      // to ensure that all subsequent relative requests are sent
+      // directly to the target host without further proxying.
       const host = extractTarget(req, true);
       if (host && !/<base\b/.test(content)) {
-        return `<base href="${host}"/>`;
+        newContent += `<base href="${host}"/>`;
       }
-    })
-  },
-  {
-    // Add script
-    query: 'body',
-    func: appendToNode(() => {
+      //--- Add blinx.js scripts
       // TODO: Determine blinx options from query parameters; if no language given, check html doc
       const language = 'en';
-      return `
-      <script
-        src="https://cdn.rawgit.com/renehamburger/Bible-Passage-Reference-Parser/99f03385/js/${language}_bcv_parser.js"
-        defer
-        data-blinx="{
-          language: '${language}',
-          theme: 'dark'
-        }">
-      </script>
-      <script
-        src="https://cdn.rawgit.com/renehamburger/blinx.js/v0.3.7/dist/blinx.js"
-        defer>
-      </script>
-    `;
+      // tslint:disable:max-line-length
+      newContent += `
+        <script
+          src="https://cdn.rawgit.com/renehamburger/Bible-Passage-Reference-Parser/99f03385/js/${language}_bcv_parser.js"
+          defer
+          data-blinx="{
+            language: '${language}',
+            theme: 'dark'
+          }">
+        </script>
+        <script
+          src="https://cdn.rawgit.com/renehamburger/blinx.js/v0.3.7/dist/blinx.js"
+          defer>
+        </script>
+      `;
+      // tslint:enable:max-line-length
+      return newContent;
     })
   }
 ];
