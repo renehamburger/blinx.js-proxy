@@ -14,13 +14,6 @@
     "type": "git",
     "url": "git+https://github.com/renehamburger/blinx.js-proxy.git"
   },
-  "dependencies": {
-    "connect": "^3.6.6",
-    "harmon": "^1.4.3",
-    "http-proxy": "^1.16.2",
-    "ts-node": "^7.0.1",
-    "typescript": "^3.0.3"
-  },
   "authors": [
     "Rene Hamburger"
   ],
@@ -29,9 +22,19 @@
     "url": "https://github.com/renehamburger/blinx.js-proxy/issues"
   },
   "homepage": "https://github.com/renehamburger/blinx.js-proxy#readme",
+  "dependencies": {
+    "blinx.js": "git+https://github.com/renehamburger/blinx.js.git#master",
+    "connect": "^3.6.6",
+    "harmon": "^1.4.3",
+    "http-proxy": "^1.16.2",
+    "lodash": "^4.17.10",
+    "ts-node": "^7.0.1",
+    "typescript": "^3.0.3"
+  },
   "devDependencies": {
     "@types/connect": "^3.4.32",
     "@types/http-proxy": "^1.16.2",
+    "@types/lodash": "^4.14.116",
     "nodemon": "^1.18.4",
     "tslint": "^5.11.0"
   }

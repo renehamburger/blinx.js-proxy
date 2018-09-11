@@ -1,14 +1,15 @@
 /**
  * TODO:
  * - Add option to Blinx to remove existing Bible links.
- * - Allow to add Blinx options to request, e.g. `bx.language=de`.
  * - Add wrapper page at blinxify.me which allows to: set url, set options, share link, maybe
  *   compare with original file.
  */
+import { Options } from 'blinx.js/src/options/options';
 import * as connect from 'connect';
 import * as harmon from 'harmon';
 import * as http from 'http';
 import * as httpProxy from 'http-proxy';
+import * as _ from 'lodash';
 import * as url from 'url';
 
 // --- Define selectors and modifiers for harmon
@@ -18,25 +19,27 @@ const selectors = [
     query: 'head',
     func: appendToNode((content, req) => {
       let newContent = content;
+      const { targetParam, options } = parseUrl(req);
+      const optionsWithDefaults = _.defaults(options, {
+        language: 'en',
+        theme: 'dark'
+      });
       //--- Add <base> tag
       // to ensure that all subsequent relative requests are sent
       // directly to the target host without further proxying.
-      const host = extractTarget(req, true);
+      const host = extractTarget(targetParam, true);
       if (host && !/<base\b/.test(content)) {
         newContent += `<base href="${host}"/>`;
       }
       //--- Add blinx.js scripts
-      // TODO: Determine blinx options from query parameters; if no language given, check html doc
-      const language = 'en';
+      const language = optionsWithDefaults.language;
+      const optionsString = JSON.stringify(options, null, 2).replace(/"/g, `'`);
       // tslint:disable:max-line-length
       newContent += `
         <script
           src="https://cdn.rawgit.com/renehamburger/Bible-Passage-Reference-Parser/99f03385/js/${language}_bcv_parser.js"
           defer
-          data-blinx="{
-            language: '${language}',
-            theme: 'dark'
-          }">
+          data-blinx="${optionsString}">
         </script>
         <script
           src="https://cdn.rawgit.com/renehamburger/blinx.js/v0.3.7/dist/blinx.js"
@@ -79,10 +82,36 @@ http.createServer(app).listen(80);
 
 //--- Helpers
 
-function extractTarget(req: http.IncomingMessage, onlyRoot = false): string | null {
+function parseUrl(req: http.IncomingMessage): { targetParam: string, options: Partial<Options> } {
   const parsedUrl = url.parse(req.url || '');
-  if (parsedUrl.query) {
-    let target = parsedUrl.query;
+  const [primaryQuery, secondaryQuery] = (parsedUrl.query || '').split('?');
+  const params = primaryQuery.split('&');
+  const options: Partial<Options> = {};
+  let targetParam = '';
+  for (const param of params) {
+    const [key, value] = param.split('=');
+    if (key) {
+      if (value) {
+        if (key === 'url') {
+          targetParam = value;
+        } else {
+          _.set(options, key, value);
+        }
+      } else if (value === undefined) {
+        targetParam = key;
+      }
+    }
+  }
+  if (secondaryQuery) {
+    targetParam += secondaryQuery;
+  }
+  return { targetParam, options };
+}
+
+function extractTarget(reqOrTargetParam: http.IncomingMessage | string, onlyRoot = false): string | null {
+  const targetParam = _.isString(reqOrTargetParam) ? reqOrTargetParam : parseUrl(reqOrTargetParam).targetParam;
+  if (targetParam) {
+    let target = targetParam;
     if (!/^https?:\/\//.test(target)) {
       target = 'http://' + target;
     }
