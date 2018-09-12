@@ -103,7 +103,7 @@ function parseUrl(req: http.IncomingMessage): { targetParam: string, options: Pa
     }
   }
   if (secondaryQuery) {
-    targetParam += secondaryQuery;
+    targetParam += `?${secondaryQuery}`;
   }
   return { targetParam, options };
 }
