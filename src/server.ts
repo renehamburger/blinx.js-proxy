@@ -42,7 +42,7 @@ const selectors = [
           data-blinx="${optionsString}">
         </script>
         <script
-          src="https://cdn.rawgit.com/renehamburger/blinx.js/v0.3.12/dist/blinx.js"
+          src="https://cdn.rawgit.com/renehamburger/blinx.js/v0.3.15/dist/blinx.js"
           defer>
         </script>
       `;
