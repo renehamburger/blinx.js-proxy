@@ -78,7 +78,7 @@ app.use((req: http.IncomingMessage, res: http.ServerResponse) => {
   }
 });
 
-http.createServer(app).listen(80);
+http.createServer(app).listen(process.env.PORT || 80);
 
 //--- Helpers
 
