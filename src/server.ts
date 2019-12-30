@@ -126,7 +126,7 @@ function extractTarget(reqOrTargetParam: http.IncomingMessage | string, onlyRoot
   return null;
 }
 
-function appendToNode(appendCallback: (content: string, req: http.IncomingMessage) => void) {
+function appendToNode(appendCallback: (content: string, req: http.IncomingMessage) => string) {
   return (node: harmon.Node, req: http.IncomingMessage) => {
     const rs = node.createReadStream();
     const ws = node.createWriteStream({ outer: false });
