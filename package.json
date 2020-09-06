@@ -26,7 +26,7 @@
     "blinx.js": "git+https://github.com/renehamburger/blinx.js.git#master",
     "connect": "^3.6.6",
     "harmon": "^1.4.3",
-    "http-proxy": "1.16.2",
+    "http-proxy": "1.18.1",
     "lodash": "^4.17.10",
     "ts-node": "^7.0.1",
     "typescript": "^3.0.3"
